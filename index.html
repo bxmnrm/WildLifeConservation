@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Rare Species Guardian | NFT Marketplace</title>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #27ae60;
+            --dark: #2c3e50;
+            --light: #f8f9fa;
+        }
+        body { font-family: 'Prompt', sans-serif; background: #eef2f3; margin: 0; padding: 20px; color: var(--dark); }
+        .container { max-width: 1100px; margin: auto; }
+        
+        /* Header & Stats */
+        .header { text-align: center; padding: 40px 0; background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); color: white; border-radius: 15px; margin-bottom: 30px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+        #status-box { background: rgba(255,255,255,0.1); display: inline-block; padding: 10px 20px; border-radius: 50px; margin-top: 10px; font-size: 0.9em; }
+
+        /* Card Grid */
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px; margin-bottom: 50px; }
+        .card { background: white; border-radius: 15px; overflow: hidden; transition: transform 0.3s, box-shadow 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: none; }
+        .card:hover { transform: translateY(-10px); box-shadow: 0 15px 30px rgba(0,0,0,0.15); }
+        .card-img { width: 100%; height: 200px; object-fit: cover; background: #ddd; }
+        .card-content { padding: 20px; text-align: center; }
+        .price-tag { color: var(--primary); font-size: 1.5em; font-weight: 600; margin: 10px 0; }
+        
+        /* Button Style */
+        .buy-btn { background: var(--primary); color: white; border: none; padding: 12px 30px; border-radius: 8px; font-size: 1em; cursor: pointer; width: 100%; transition: 0.3s; font-weight: 600; }
+        .buy-btn:hover { background: #219150; }
+
+        /* Modern Table */
+        .history-section { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th { background: #f8f9fa; color: #777; font-weight: 600; text-transform: uppercase; font-size: 0.8em; padding: 15px; border-bottom: 2px solid #eee; text-align: left; }
+        td { padding: 15px; border-bottom: 1px solid #eee; font-size: 0.95em; }
+        .addr-pill { background: #f1f3f5; padding: 4px 10px; border-radius: 4px; font-family: monospace; color: #555; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Rare Species Guardian</h1>
+            <p>ร่วมปกป้องสัตว์ป่าสงวนไทยผ่านระบบ Blockchain</p>
+            <div id="status-box">
+                <span id="status">กำลังเชื่อมต่อ MetaMask...</span> | 
+                <small id="account">ยังไม่ได้เชื่อมต่อ</small>
+            </div>
+        </div>
+
+        <div class="grid" id="animalGrid">
+            </div>
+
+        <div class="history-section">
+            <h2>📜 ประวัติการอุปถัมภ์ (Blockchain Record)</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>วัน-เวลา</th>
+                        <th>สัตว์ป่า</th>
+                        <th>ที่อยู่ผู้ครอบครอง (Owner Address)</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script type="module">
+        import { ethers } from "https://cdnjs.cloudflare.com/ajax/libs/ethers/6.15.0/ethers.min.js";
+
+        // ข้อมูลสัตว์ป่า 6 ชนิด 
+        const animals = [
+            { id: 'Dugong', name: 'พะยูน', price: '0.001', img: 'Dugong.jpg' },
+            { id: 'RiverMartin', name: 'นกเจ้าฟ้าหญิงฯ', price: '0.002', img: 'RiverMartin.jpg' },
+            { id: 'Kouprey', name: 'กูปรี', price: '0.003', img: 'Kouprey.jpg' },
+            { id: 'EldDeer', name: 'ละมั่ง', price: '0.001', img: 'EldDeer.jpg' },
+            { id: 'Leatherback', name: 'เต่ามะเฟือง', price: '0.002', img: 'Leatherback.jpg' },
+            { id: 'Tapir', name: 'สมเสร็จ', price: '0.001', img: 'Tapir.jpg' }
+        ];
+
+        const contractAddress = "0xd7209bb9c80823fefcb6e12d45ed815b492c901a"; // เลขจากรูป Transaction ของคุณ
+        const abi = [
+            "function buyCharacter(string memory _name) public payable",
+            "function getHistory() public view returns (tuple(string characterName, address owner, uint256 timestamp)[])"
+        ];
+
+        let contract;
+
+        // ฟังก์ชันสร้าง Card สัตว์ป่า [cite: 5]
+        function renderCards() {
+            const grid = document.getElementById('animalGrid');
+            grid.innerHTML = animals.map(a => `
+                <div class="card">
+                    <img src="${a.img}" class="card-img" alt="${a.name}">
+                    <div class="card-content">
+                        <h3>${a.name}</h3>
+                        <div class="price-tag">${a.price} ETH</div>
+                        <button class="buy-btn" onclick="buy('${a.id}', '${a.price}')">คุ้มครองตัวละครนี้</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function init() {
+            if (window.ethereum) {
+                const provider = new ethers.BrowserProvider(window.ethereum);
+                const accounts = await provider.send("eth_requestAccounts", []);
+                const signer = await provider.getSigner();
+                contract = new ethers.Contract(contractAddress, abi, signer);
+                
+                document.getElementById('account').innerText = accounts[0];
+                document.getElementById('status').innerText = 'เชื่อมต่อแล้ว';
+                renderCards();
+                loadHistory();
+            }
+        }
+
+        async function buy(id, price) {
+            try {
+                const tx = await contract.buyCharacter(id, { value: ethers.parseEther(price) });
+                await tx.wait();
+                alert('การทำรายการสำเร็จ! คุณเป็นผู้พิทักษ์แล้ว');
+                loadHistory();
+            } catch (err) { alert('Error: ' + err.message); }
+        }
+
+        async function loadHistory() {
+            const data = await contract.getHistory();
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = data.map(item => `
+                <tr>
+                    <td>${new Date(Number(item.timestamp) * 1000).toLocaleString()}</td>
+                    <td><b>${item.characterName}</b></td>
+                    <td><span class="addr-pill">${item.owner}</span></td>
+                </tr>
+            `).reverse().join(''); // ล่าสุดอยู่บนสุด [cite: 5]
+        }
+
+        window.buy = buy;
+        init();
+    </script>
+</body>
+</html>

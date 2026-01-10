@@ -71,14 +71,15 @@
 
         // ข้อมูลสัตว์ป่า 6 ชนิด 
         const animals = [
-            { id: 'Dugong', name: 'พะยูน', price: '0.001', img: 'Dugong.jpg' },
-            { id: 'RiverMartin', name: 'นกเจ้าฟ้าหญิงฯ', price: '0.002', img: 'RiverMartin.jpg' },
-            { id: 'Kouprey', name: 'กูปรี', price: '0.003', img: 'Kouprey.jpg' },
-            { id: 'EldDeer', name: 'ละมั่ง', price: '0.001', img: 'EldDeer.jpg' },
-            { id: 'Leatherback', name: 'เต่ามะเฟือง', price: '0.002', img: 'Leatherback.jpg' },
-            { id: 'Tapir', name: 'สมเสร็จ', price: '0.001', img: 'Tapir.jpg' }
+            { id: 'Dugong', name: 'พะยูน', price: '0.001', img: 'pic/Dugong.jpg' },
+            { id: 'RiverMartin', name: 'นกเจ้าฟ้าหญิงฯ', price: '0.002', img: 'pic/RiverMartin.jpg' },
+            { id: 'Kouprey', name: 'กูปรี', price: '0.003', img: 'pic/Kouprey.jpg' },
+            { id: 'EldDeer', name: 'ละมั่ง', price: '0.001', img: 'pic/EldDeer.jpg' },
+            { id: 'Leatherback', name: 'เต่ามะเฟือง', price: '0.002', img: 'pic/Leatherback.jpg' },
+            { id: 'Tapir', name: 'สมเสร็จ', price: '0.001', img: 'pic/Tapir.jpg' }
         ];
 
+        //ถ้าต้องการเปลี่ยน Contract Address ให้เปลี่ยนที่บรรทัดนี้
         const contractAddress = "0xd7209bb9c80823fefcb6e12d45ed815b492c901a"; // เลขจากรูป Transaction ของคุณ
         const abi = [
             "function buyCharacter(string memory _name) public payable",
@@ -87,7 +88,7 @@
 
         let contract;
 
-        // ฟังก์ชันสร้าง Card สัตว์ป่า [cite: 5]
+        // ฟังก์ชันสร้าง Card สัตว์ป่า 
         function renderCards() {
             const grid = document.getElementById('animalGrid');
             grid.innerHTML = animals.map(a => `
@@ -134,7 +135,7 @@
                     <td><b>${item.characterName}</b></td>
                     <td><span class="addr-pill">${item.owner}</span></td>
                 </tr>
-            `).reverse().join(''); // ล่าสุดอยู่บนสุด [cite: 5]
+            `).reverse().join(''); // ล่าสุดอยู่บนสุด 
         }
 
         window.buy = buy;

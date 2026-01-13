@@ -1,9 +1,10 @@
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <title>Rare Species Guardian | NFT Marketplace</title>
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         :root {
             --primary: #27ae60;
@@ -14,8 +15,8 @@
         .container { max-width: 1100px; margin: auto; }
         
         /* Header & Stats */
-        .header { text-align: center; padding: 40px 0; background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); color: white; border-radius: 15px; margin-bottom: 30px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
-        #status-box { background: rgba(255,255,255,0.1); display: inline-block; padding: 10px 20px; border-radius: 50px; margin-top: 10px; font-size: 0.9em; }
+        .header { text-align: center; padding: 40px 0; background: linear-gradient(to right, #6a11cb, #2575fc); color: white; border-radius: 15px; margin-bottom: 30px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+        #status-box { background: rgba(255,255,255,0.2); display: inline-block; padding: 10px 20px; border-radius: 50px; margin-top: 10px; font-size: 0.9em; }
 
         /* Card Grid */
         .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px; margin-bottom: 50px; }
@@ -80,8 +81,8 @@
         ];
 
         //ถ้าต้องการเปลี่ยน Contract Address ให้เปลี่ยนที่บรรทัดนี้
-        const contractAddress = "0xf66a7017f7ef4f1f4b2778ea99abe8bab7d8afa0"; // อุปถัมภ์ กรูปรีย์
-        //const contractAddress = "0xa1a1ba476ea766aa51d08ce8f159380a1712427c"; // อุปภัมณ์ สมเสร็จ
+        //const contractAddress = "0xf66a7017f7ef4f1f4b2778ea99abe8bab7d8afa0"; // อุปถัมภ์ กรูปรีย์
+        const contractAddress = "0xa1a1ba476ea766aa51d08ce8f159380a1712427c"; // อุปภัมณ์ สมเสร็จ
         const abi = [
             "function buyCharacter(string memory _name) public payable",
             "function getHistory() public view returns (tuple(string characterName, address owner, uint256 timestamp)[])"
@@ -121,10 +122,31 @@
         async function buy(id, price) {
             try {
                 const tx = await contract.buyCharacter(id, { value: ethers.parseEther(price) });
+
+                Swal.fire({
+                    title: 'กำลังทำรายการ...',
+                    text: 'กรุณารอสักครู่',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading()
+                    }
+                });
+
                 await tx.wait();
-                alert('การทำรายการสำเร็จ! คุณเป็นผู้พิทักษ์แล้ว');
+
+                Swal.fire(
+                    'สำเร็จ!',
+                    'คุณได้เป็นผู้พิทักษ์แล้ว!',
+                    'success'
+                )
                 loadHistory();
-            } catch (err) { alert('Error: ' + err.message); }
+            } catch (err) {
+                Swal.fire(
+                    'เกิดข้อผิดพลาด!',
+                    err.message,
+                    'error'
+                )
+            }
         }
 
         async function loadHistory() {
@@ -137,6 +159,235 @@
                     <td><span class="addr-pill">${item.owner}</span></td>
                 </tr>
             `).reverse().join(''); // ล่าสุดอยู่บนสุด 
+        }
+
+        window.buy = buy;
+        init();
+    </script>
+</body>
+</html> -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Rare Species Guardian | NFT Marketplace</title>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        :root {
+            --primary: #27ae60;
+            --dark: #2c3e50;
+            --light: #f8f9fa;
+        }
+        body { font-family: 'Prompt', sans-serif; background: #eef2f3; margin: 0; padding: 20px; color: var(--dark); }
+        .container { max-width: 1100px; margin: auto; }
+        
+        /* Header & Stats */
+        .header { text-align: center; padding: 40px 0; background: linear-gradient(to right, #6a11cb, #2575fc); color: white; border-radius: 15px; margin-bottom: 30px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+        #status-box { background: rgba(255,255,255,0.2); display: inline-block; padding: 10px 20px; border-radius: 50px; margin-top: 10px; font-size: 0.9em; }
+
+        /* Card Grid */
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px; margin-bottom: 50px; }
+        .card { background: white; border-radius: 15px; overflow: hidden; transition: transform 0.3s, box-shadow 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: none; }
+        .card:hover { transform: translateY(-10px); box-shadow: 0 15px 30px rgba(0,0,0,0.15); }
+        .card-img { width: 100%; height: 200px; object-fit: cover; background: #ddd; }
+        .card-content { padding: 20px; text-align: center; }
+        .price-tag { color: var(--primary); font-size: 1.5em; font-weight: 600; margin: 10px 0; }
+        
+        /* Button Style */
+        .buy-btn { background: var(--primary); color: white; border: none; padding: 12px 30px; border-radius: 8px; font-size: 1em; cursor: pointer; width: 100%; transition: 0.3s; font-weight: 600; }
+        .buy-btn:hover { background: #219150; }
+
+        /* Modern Table */
+        .history-section { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th { background: #f8f9fa; color: #777; font-weight: 600; text-transform: uppercase; font-size: 0.8em; padding: 15px; border-bottom: 2px solid #eee; text-align: left; }
+        td { padding: 15px; border-bottom: 1px solid #eee; font-size: 0.95em; }
+        .addr-pill { background: #f1f3f5; padding: 4px 10px; border-radius: 4px; font-family: monospace; color: #555; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Rare Species Guardian</h1>
+            <p>ร่วมปกป้องสัตว์ป่าสงวนไทยผ่านระบบ Blockchain</p>
+            <div id="status-box">
+                <span id="status">กำลังเชื่อมต่อ MetaMask...</span> | 
+                <small id="account">ยังไม่ได้เชื่อมต่อ</small>
+            </div>
+        </div>
+
+        <div class="grid" id="animalGrid">
+            </div>
+
+        <div class="history-section">
+            <h2>📜 ประวัติการอุปถัมภ์ (Blockchain Record)</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>วัน-เวลา</th>
+                        <th>สัตว์ป่า</th>
+                        <th>ที่อยู่ผู้ครอบครอง (Owner Address)</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script type="module">
+        import { ethers } from "https://cdnjs.cloudflare.com/ajax/libs/ethers/6.15.0/ethers.min.js";
+
+        // ข้อมูลสัตว์ป่า 6 ชนิด 
+        const animals = [
+            { id: 'Dugong', name: 'พะยูน', price: '0.001', img: 'pic/Dugong.jpg' },
+            { id: 'RiverMartin', name: 'นกเจ้าฟ้าหญิงฯ', price: '0.002', img: 'pic/RiverMartin.jpg' },
+            { id: 'Kouprey', name: 'กูปรี', price: '0.003', img: 'pic/Kouprey.jpg' },
+            { id: 'EldDeer', name: 'ละมั่ง', price: '0.001', img: 'pic/EldDeer.jpg' },
+            { id: 'Leatherback', name: 'เต่ามะเฟือง', price: '0.002', img: 'pic/Leatherback.jpg' },
+            { id: 'Tapir', name: 'สมเสร็จ', price: '0.001', img: 'pic/Tapir.jpg' }
+        ];
+
+        
+        const contractAddress = "0xa1a1ba476ea766aa51d08ce8f159380a1712427c"; // อุปภัมณ์ สมเสร็จ
+        //const contractAddress = "0x6b05960aecde1e28b9f73ce41de040a8f999e052"; // อุปภัมณ์ เต่ามะเฟือง
+        const abi = [
+            "function buyCharacter(string memory _name) public payable",
+            "function getHistory() public view returns (tuple(string characterName, address owner, uint256 timestamp)[])"
+        ];
+
+        let contract;
+
+        // ฟังก์ชันสร้าง Card สัตว์ป่า 
+        function renderCards() {
+            const grid = document.getElementById('animalGrid');
+            grid.innerHTML = animals.map(a => `
+                <div class="card">
+                    <img src="${a.img}" class="card-img" alt="${a.name}">
+                    <div class="card-content">
+                        <h3>${a.name}</h3>
+                        <div class="price-tag">${a.price} ETH</div>
+                        <button class="buy-btn" onclick="buy('${a.id}', '${a.price}')">อุปถัมภ์น้อง${a.name}</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function init() {
+            if (window.ethereum) {
+                try {
+                    const provider = new ethers.BrowserProvider(window.ethereum);
+                    const accounts = await provider.send("eth_requestAccounts", []);
+                    const signer = await provider.getSigner();
+                    contract = new ethers.Contract(contractAddress, abi, signer);
+                    
+                    document.getElementById('account').innerText = accounts[0];
+                    document.getElementById('status').innerText = 'เชื่อมต่อแล้ว';
+                    renderCards();
+                    loadHistory();
+                } catch (e) {
+                    console.error(e);
+                    document.getElementById('status').innerText = 'การเชื่อมต่อล้มเหลว';
+                }
+            } else {
+                alert("กรุณาติดตั้ง MetaMask");
+            }
+        }
+
+        // ฟังก์ชันซื้อ (แก้ไขใหม่: เพิ่มการจัดการ Error ให้อ่านง่าย)
+        async function buy(id, price) {
+            try {
+                // 1. เรียกคำสั่งซื้อ
+                const tx = await contract.buyCharacter(id, { value: ethers.parseEther(price) });
+
+                // 2. แสดง Loading
+                Swal.fire({
+                    title: 'กำลังทำรายการ...',
+                    text: 'กรุณารอสักครู่ ธุรกรรมกำลังยืนยันบน Blockchain',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading()
+                    }
+                });
+
+                // 3. รอจนกว่าธุรกรรมจะเสร็จ
+                await tx.wait();
+
+                // 4. แสดงผลสำเร็จ
+                Swal.fire(
+                    'สำเร็จ!',
+                    'คุณได้เป็นผู้พิทักษ์แล้ว!',
+                    'success'
+                )
+                loadHistory(); // อัปเดตตาราง
+
+            } catch (err) {
+                console.error(err); // ดู Error เต็มๆ ใน Console (F12)
+                
+                // เรียกใช้ฟังก์ชันแปลงภาษา Error
+                const message = getFriendlyError(err);
+
+                Swal.fire(
+                    'เกิดข้อผิดพลาด!',
+                    message,
+                    'error'
+                )
+            }
+        }
+
+        // ฟังก์ชันโหลดประวัติ
+        async function loadHistory() {
+            try {
+                const data = await contract.getHistory();
+                const tbody = document.getElementById('tableBody');
+                
+                if (data.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="3" style="text-align:center;">ยังไม่มีประวัติการอุปถัมภ์</td></tr>`;
+                    return;
+                }
+
+                tbody.innerHTML = data.map(item => `
+                    <tr>
+                        <td>${new Date(Number(item.timestamp) * 1000).toLocaleString()}</td>
+                        <td><b>${item.characterName}</b></td>
+                        <td><span class="addr-pill">${item.owner}</span></td>
+                    </tr>
+                `).reverse().join(''); // ล่าสุดอยู่บนสุด 
+            } catch (e) {
+                console.log("Error loading history:", e);
+            }
+        }
+
+        // ฟังก์ชันช่วยแปลง Error ยาวๆ ให้เป็นภาษาไทยสั้นๆ
+        function getFriendlyError(err) {
+            const msg = err.message || "";
+
+            // 1. ผู้ใช้กดยกเลิก
+            if (msg.includes("user rejected") || err.code === 4001 || msg.includes("User denied")) {
+                return "คุณยกเลิกการทำรายการ";
+            }
+
+            // 2. ติดเงื่อนไข require ใน Solidity (เช่น ซื้อซ้ำ)
+            if (msg.includes("execution reverted")) {
+                // พยายามตัดเอาข้อความหลัง execution reverted
+                // ข้อความมักจะเป็น: ... execution reverted: "ข้อความของเรา" ...
+                const parts = msg.split("execution reverted:");
+                if (parts[1]) {
+                    // ลบตัวอักษรขยะที่อาจติดมา เช่น " } ]
+                    let reason = parts[1].split('"')[1]; 
+                    if(!reason) reason = parts[1]; // เผื่อรูปแบบไม่ตรงเป๊ะ
+                    return reason.replace(/["}]/g, "").trim(); 
+                }
+                return "เงื่อนไขไม่ถูกต้อง (Transaction Reverted)";
+            }
+
+            // 3. เงินไม่พอ
+            if (msg.includes("insufficient funds")) {
+                return "ยอดเงิน ETH ของคุณไม่เพียงพอ (รวมค่า Gas)";
+            }
+
+            // 4. อื่นๆ
+            return "ทำรายการไม่สำเร็จ (โปรดลองใหม่อีกครั้ง)";
         }
 
         window.buy = buy;

@@ -8,26 +8,31 @@ contract WildlifeGuardian {
         uint256 timestamp;
     }
 
-    // 1. เก็บประวัติทั้งหมด (รวมถึงการซื้อในอดีต)
     Purchase[] public history;
     
-    // 2. เก็บสถานะเจ้าของปัจจุบัน (เพื่อเช็คว่าซ้ำไหม)
+    // เก็บเจ้าของสัตว์แต่ละตัว (ป้องกันสัตว์ซ้ำ)
     mapping(string => address) public animalOwner;
+
+    // 1. เพิ่มตัวแปรเช็คว่า Address นี้เคยซื้อไปหรือยัง (ป้องกันคนซื้อซ้ำ)
+    mapping(address => bool) public hasBought; // <-- เพิ่มใหม่
 
     event CharacterBought(address indexed owner, string characterName, uint256 timestamp);
 
-    // ยุบเหลือฟังก์ชันเดียว และเพิ่มเงื่อนไขตรวจสอบ
     function buyCharacter(string memory _name) public payable {
-        // ตรวจสอบเงื่อนไข 1: ต้องจ่ายเงินมากกว่า 0
         require(msg.value > 0, "Price must be greater than 0");
         
-        // ตรวจสอบเงื่อนไข 2: สัตว์ตัวนี้ต้องยังไม่มีเจ้าของ (Address ต้องเป็น 0x0...)
+        // เช็คว่าสัตว์ตัวนี้มีเจ้าของหรือยัง (โค้ดเดิม)
         require(animalOwner[_name] == address(0), "This animal already has a guardian!");
         
-        // บันทึกเจ้าของลงใน Mapping
-        animalOwner[_name] = msg.sender;
+        // 2. เพิ่มเงื่อนไขเช็คว่าคนซื้อ เคยซื้อไปหรือยัง? ถ้าเคยแล้วให้ Error
+        require(!hasBought[msg.sender], "You can only adopt 1 animal per wallet!"); // <-- เพิ่มใหม่
         
-        // บันทึกข้อมูลลงใน History Array สำหรับแสดงในตาราง
+        // บันทึกเจ้าของลงใน Mapping สัตว์
+        animalOwner[_name] = msg.sender;
+
+        // 3. บันทึกว่าคนนี้ซื้อไปแล้ว จะได้กลับมาซื้ออีกไม่ได้
+        hasBought[msg.sender] = true; // <-- เพิ่มใหม่
+        
         history.push(Purchase({
             characterName: _name,
             owner: msg.sender,
